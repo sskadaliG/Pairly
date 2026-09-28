@@ -2,14 +2,22 @@ const express = require('express');
 
 const app = express();
 
+app.use("/user", (req, res, next) => {
+    next();
+    // res.send("Hello User");
 
-
-app.get("/user/:userId/:name/:password/", (req, res) => {
-    console.log(req.params);
-    res.send("FirstName: Sri, LastName: kadali, Age: 22, Gender: Female")
-});
-
-
+}, (req, res, next) => {
+    // res.send("Hello User 2")
+    next();
+},
+    (req, res, next) => {
+        // res.send("Hello User 3")
+        next();
+    },
+    (req, res, next) => {
+        res.send("Hello User 4")
+    }
+);
 
 
 app.listen(3000, () => {
