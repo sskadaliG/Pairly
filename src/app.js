@@ -4,21 +4,11 @@ const app = express();
 
 
 
-app.get("/user", (req, res) => {
+app.get("/user/:userId/:name/:password/", (req, res) => {
+    console.log(req.params);
     res.send("FirstName: Sri, LastName: kadali, Age: 22, Gender: Female")
 });
 
-app.post("/user", (req, res) => {
-    res.send("User created successfully")
-});
-
-app.delete("/user", (req, res) => {
-    res.send("User deleted successfully")
-});
-
-app.use("/", (req, res) => {
-    res.send("Hello dashboard")
-});
 
 
 
