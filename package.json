@@ -15,6 +15,7 @@
   "author": "Sri Kadali",
   "license": "ISC",
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mongoose": "^9.10.2"
   }
 }
