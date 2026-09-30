@@ -32,5 +32,43 @@ app.post("/signup", async (req, res) => {
     }
 
 });
+app.get("/user", async (req, res) => {
+    console.log(req.query.email);
+    try {
+        const users = await User.find({ email: req.body.email });
+        if (users.length === 0) {
+            return res.status(404).send("User not found");
+        } else {
+            res.json(users[0]);
+        }
+    } catch (err) {
+        res.status(500).send("Error fetching users: " + err.message);
+    }
+
+});
+
+app.get("/feed", async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (err) {
+        res.status(500).send("Error fetching users: " + err.message);
+    }
+
+});
+
+app.delete("/users/:id", async (req, res) => {
+
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) {
+            return res.status(404).send("User not found");
+        }
+        res.send("User deleted successfully!");
+    } catch (err) {
+        res.status(500).send("Error deleting user: " + err.message);
+    }
+
+});
 
 
