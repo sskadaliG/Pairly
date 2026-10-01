@@ -23,6 +23,9 @@ connectDB().then(() => {
 app.post("/signup", async (req, res) => {
 
     const user = new User(req.body);
+    if (!user.firstName || !user.email || !user.password || !user.gender) {
+        return res.status(400).send("Missing required fields: firstName, email, password, gender");
+    };
 
     try {
         await user.save();
@@ -36,12 +39,11 @@ app.post("/signup", async (req, res) => {
 
 });
 app.get("/user", async (req, res) => {
-    console.log(req.query.email);
-    if (!req.query.email) {
+    if (!req.body.email) {
         return res.status(400).send("Email is required");
     }
     try {
-        const users = await User.find({ email: req.query.email });
+        const users = await User.find({ email: req.body.email });
         if (users.length === 0) {
             return res.status(404).send("User not found");
         } else {
@@ -63,10 +65,10 @@ app.get("/feed", async (req, res) => {
 
 });
 
-app.delete("/users/:id", async (req, res) => {
+app.delete("/users", async (req, res) => {
 
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
+        const user = await User.findByIdAndDelete(req.body.id);
         if (!user) {
             return res.status(404).send("User not found");
         }
@@ -75,6 +77,21 @@ app.delete("/users/:id", async (req, res) => {
         res.status(500).send("Error deleting user: " + err.message);
     }
 
+});
+
+app.patch("/users", async (req, res) => {
+    const id = req.body._id;
+    try {
+        const user = await User.findByIdAndUpdate(id, req.body, { returnDocument: "after" });
+        console.log("User after update:", user); // Log the user after update for debugging
+        if (!user) {
+            return res.status(404).send("User not found");
+        }
+        res.json(user);
+        console.log("Updated user:", user); // Log the updated user for debugging
+    } catch (err) {
+        res.status(400).send("Error updating user: " + err.message);
+    }
 });
 
 
