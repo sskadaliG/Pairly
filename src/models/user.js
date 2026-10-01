@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const validator = require('validator');
 
 const userSchema = new Schema({
     firstName: {
@@ -21,13 +22,23 @@ const userSchema = new Schema({
         trim: true,
         minlength: 5,
         maxlength: 50,
-        match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address.']
+
+        validate(value) {
+            if (!validator.isEmail(value)) {
+                throw new Error('Invalid email format');
+            }
+        }
     },
     password: {
         type: String,
         required: true,
         minlength: 8,
-        maxlength: 50
+        maxlength: 50,
+        validate(value) {
+            if (!validator.isStrongPassword(value, { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1 })) {
+                throw new Error('Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one symbol');
+            }
+        }
     },
     age: {
         type: Number,
@@ -73,6 +84,7 @@ const userSchema = new Schema({
                 throw new Error('Zip code must be 5 digits');
             }
         }
+
     },
     country: {
         type: String,
@@ -82,7 +94,12 @@ const userSchema = new Schema({
     photoURL: {
         type: String,
         default: "https://cdn.vectorstock.com/i/1000v/42/08/avatar-default-user-profile-icon-social-media-vector-57234208.jpg",
-        maxlength: 200
+        maxlength: 200,
+        validate(value) {
+            if (!validator.isURL(value)) {
+                throw new Error('Invalid URL format');
+            }
+        }
     },
     bio: {
         type: String,

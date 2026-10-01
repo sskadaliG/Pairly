@@ -81,7 +81,7 @@ app.delete("/users", async (req, res) => {
 
 app.patch("/users/:userId", async (req, res) => {
     const userId = req.params?.userId;
-    canUpdateFields = ['firstName', 'lastName', 'password', 'age', 'gender', 'phoneNumber', 'address', 'city', 'state', 'zipCode', 'country'];
+    canUpdateFields = ['firstName', 'lastName', 'password', 'age', 'gender', 'phoneNumber', 'address', 'city', 'state', 'zipCode', 'country', 'photoURL', 'bio', 'interests'];
     updateFields = Object.keys(req.body);
     const isValidOperation = updateFields.every((field) => canUpdateFields.includes(field));
 
@@ -90,12 +90,10 @@ app.patch("/users/:userId", async (req, res) => {
     }
     try {
         const user = await User.findByIdAndUpdate(userId, req.body, { returnDocument: "after" });
-        console.log("User after update:", user); // Log the user after update for debugging
         if (!user) {
             return res.status(404).send("User not found");
         }
         res.json(user);
-        console.log("Updated user:", user); // Log the updated user for debugging
     } catch (err) {
         res.status(400).send("Error updating user: " + err.message);
     }
