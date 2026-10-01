@@ -8,6 +8,8 @@ const app = express();
 
 const bcrypt = require('bcrypt');
 
+const validator = require('validator');
+
 const { validateSignUpData } = require("./utils/validateSignUpData");
 
 app.use(express.json());
@@ -33,7 +35,37 @@ app.post("/signup", async (req, res) => {
     }
 
 });
-app.get("/user", async (req, res) => {
+
+app.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        if (!validator.isEmail(email)) {
+            return res.status(400).send("Invalid email format");
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).send("Invalid credentials");
+        }
+
+        if (!password) {
+            return res.status(400).send("Password is required");
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).send("Invalid credentials");
+        }
+
+        res.send("Login successful!");
+    } catch (err) {
+        res.status(500).send("Error logging in: " + err.message);
+    }
+});
+
+
+app.get("/users", async (req, res) => {
     if (!req.body.email) {
         return res.status(400).send("Email is required");
     }
