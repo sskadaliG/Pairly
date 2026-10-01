@@ -28,6 +28,9 @@ app.post("/signup", async (req, res) => {
         await user.save();
         res.send("User created successfully!");
     } catch (err) {
+        if (err.code === 11000) {
+            return res.status(409).send("Email already registered");
+        }
         res.status(400).send("Error creating user: " + err.message);
     }
 
