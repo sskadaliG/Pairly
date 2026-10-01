@@ -34,8 +34,11 @@ app.post("/signup", async (req, res) => {
 });
 app.get("/user", async (req, res) => {
     console.log(req.query.email);
+    if (!req.query.email) {
+        return res.status(400).send("Email is required");
+    }
     try {
-        const users = await User.find({ email: req.body.email });
+        const users = await User.find({ email: req.query.email });
         if (users.length === 0) {
             return res.status(404).send("User not found");
         } else {
