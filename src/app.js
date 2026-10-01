@@ -6,28 +6,23 @@ const User = require("./models/user");
 
 const app = express();
 
+const bcrypt = require('bcrypt');
+
+const { validateSignUpData } = require("./utils/validateSignUpData");
+
 app.use(express.json());
 
 
-connectDB().then(() => {
-    console.log("Database connected successfully!");
-
-    app.listen(3000, () => {
-        console.log("server is up and running!")
-    })
-
-}).catch((err) => {
-    console.log("Database connection failed!", err);
-});
-
 app.post("/signup", async (req, res) => {
 
-    const user = new User(req.body);
-    if (!user.firstName || !user.email || !user.password || !user.gender) {
-        return res.status(400).send("Missing required fields: firstName, email, password, gender");
-    };
+
+    const { firstName, lastName, email, password, age, gender, phoneNumber, address, city, state, zipCode, country, photoURL, bio, interests } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = new User({ firstName, lastName, email, password: passwordHash, age, gender, phoneNumber, address, city, state, zipCode, country, photoURL, bio, interests });
 
     try {
+        validateSignUpData(req);
         await user.save();
         res.send("User created successfully!");
     } catch (err) {
@@ -99,4 +94,14 @@ app.patch("/users/:userId", async (req, res) => {
     }
 });
 
+connectDB().then(() => {
+    console.log("Database connected successfully!");
+
+    app.listen(3000, () => {
+        console.log("server is up and running!")
+    })
+
+}).catch((err) => {
+    console.log("Database connection failed!", err);
+});
 
