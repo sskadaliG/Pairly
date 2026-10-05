@@ -12,6 +12,14 @@ const validator = require('validator');
 
 const { validateSignUpData } = require("./utils/validateSignUpData");
 
+const cookieParser = require('cookie-parser');
+
+const jwt = require('jsonwebtoken');
+
+require('dotenv').config();
+
+app.use(cookieParser());
+
 app.use(express.json());
 
 
@@ -57,11 +65,32 @@ app.post("/login", async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).send("Invalid credentials");
         }
+        const token = jwt.sign({ "userId": user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        res.cookie("token", token, { httpOnly: true });
 
         res.send("Login successful!");
     } catch (err) {
         res.status(500).send("Error logging in: " + err.message);
     }
+});
+
+app.get("/profile", async (req, res) => {
+    const cookies = req.cookies;
+    try {
+        if (!cookies.token) {
+            return res.status(401).send("Token not found");
+        }
+        const decodedMessage = jwt.verify(cookies.token, process.env.JWT_SECRET);
+
+        const user = await User.findById(decodedMessage.userId);
+        if (!user) {
+            return res.status(404).send("User not found, please login again");
+        }
+        res.send(user);
+    } catch (err) {
+        res.status(401).send("Invalid token");
+    }
+
 });
 
 
