@@ -52,7 +52,7 @@ app.post("/login", async (req, res) => {
             return res.status(400).send("Invalid email format");
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select('+password');
         if (!user) {
             return res.status(404).send("Invalid credentials");
         }
