@@ -137,15 +137,25 @@ app.delete("/users", async (req, res) => {
 
 app.patch("/users/:userId", async (req, res) => {
     const userId = req.params?.userId;
-    canUpdateFields = ['firstName', 'lastName', 'password', 'age', 'gender', 'phoneNumber', 'address', 'city', 'state', 'zipCode', 'country', 'photoURL', 'bio', 'interests'];
-    updateFields = Object.keys(req.body);
+    const canUpdateFields = ['firstName', 'lastName', 'password', 'age', 'gender', 'phoneNumber', 'address', 'city', 'state', 'zipCode', 'country', 'photoURL', 'bio', 'interests'];
+    const updateFields = Object.keys(req.body);
     const isValidOperation = updateFields.every((field) => canUpdateFields.includes(field));
 
-    if (!isValidOperation) {
-        return res.status(400).send("Invalid updates!");
-    }
+    const updates = { ...req.body };
+
     try {
-        const user = await User.findByIdAndUpdate(userId, req.body, { returnDocument: "after" });
+        if (!isValidOperation) {
+            return res.status(400).send("Invalid updates!");
+        }
+
+        if (updates.password !== undefined) {
+            if (!validator.isStrongPassword(String(updates.password))) {
+                return res.status(400).send("Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one symbol");
+            }
+            updates.password = await bcrypt.hash(updates.password, 10);
+        }
+
+        const user = await User.findByIdAndUpdate(userId, updates, { returnDocument: "after" });
         if (!user) {
             return res.status(404).send("User not found");
         }
