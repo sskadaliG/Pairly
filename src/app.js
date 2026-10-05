@@ -16,6 +16,8 @@ const cookieParser = require('cookie-parser');
 
 const jwt = require('jsonwebtoken');
 
+const { userAuth } = require("./middlewares/auth");
+
 require('dotenv').config();
 
 app.use(cookieParser());
@@ -74,18 +76,10 @@ app.post("/login", async (req, res) => {
     }
 });
 
-app.get("/profile", async (req, res) => {
-    const cookies = req.cookies;
-    try {
-        if (!cookies.token) {
-            return res.status(401).send("Token not found");
-        }
-        const decodedMessage = jwt.verify(cookies.token, process.env.JWT_SECRET);
+app.get("/profile", userAuth, async (req, res) => {
 
-        const user = await User.findById(decodedMessage.userId);
-        if (!user) {
-            return res.status(404).send("User not found, please login again");
-        }
+    try {
+        const user = req.user;
         res.send(user);
     } catch (err) {
         res.status(401).send("Invalid token");
@@ -111,7 +105,7 @@ app.get("/users", async (req, res) => {
 
 });
 
-app.get("/feed", async (req, res) => {
+app.get("/feed", userAuth, async (req, res) => {
     try {
         const users = await User.find();
         res.json(users);
@@ -121,21 +115,12 @@ app.get("/feed", async (req, res) => {
 
 });
 
-app.delete("/users", async (req, res) => {
 
-    try {
-        const user = await User.findByIdAndDelete(req.body.id);
-        if (!user) {
-            return res.status(404).send("User not found");
-        }
-        res.send("User deleted successfully!");
-    } catch (err) {
-        res.status(500).send("Error deleting user: " + err.message);
+app.patch("/users/:userId", userAuth, async (req, res) => {
+    const userId = req.params?.userId;
+    if (userId !== req.user._id.toString()) {
+        return res.status(403).send("You are not authorized to update this user");
     }
-
-});
-
-app.patch("/users/:userId", async (req, res) => {
     const userId = req.params?.userId;
     const canUpdateFields = ['firstName', 'lastName', 'password', 'age', 'gender', 'phoneNumber', 'address', 'city', 'state', 'zipCode', 'country', 'photoURL', 'bio', 'interests'];
     const updateFields = Object.keys(req.body);
