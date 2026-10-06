@@ -14,8 +14,6 @@ const { validateSignUpData } = require("./utils/validateSignUpData");
 
 const cookieParser = require('cookie-parser');
 
-const jwt = require('jsonwebtoken');
-
 const { userAuth } = require("./middlewares/auth");
 
 require('dotenv').config();
@@ -63,11 +61,11 @@ app.post("/login", async (req, res) => {
             return res.status(400).send("Password is required");
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await user.validatePassword(password);
         if (!isPasswordValid) {
             return res.status(401).send("Invalid credentials");
         }
-        const token = jwt.sign({ "userId": user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = await user.toJWT();
         res.cookie("token", token, { httpOnly: true });
 
         res.send("Login successful!");
@@ -121,7 +119,6 @@ app.patch("/users/:userId", userAuth, async (req, res) => {
     if (userId !== req.user._id.toString()) {
         return res.status(403).send("You are not authorized to update this user");
     }
-    const userId = req.params?.userId;
     const canUpdateFields = ['firstName', 'lastName', 'password', 'age', 'gender', 'phoneNumber', 'address', 'city', 'state', 'zipCode', 'country', 'photoURL', 'bio', 'interests'];
     const updateFields = Object.keys(req.body);
     const isValidOperation = updateFields.every((field) => canUpdateFields.includes(field));
