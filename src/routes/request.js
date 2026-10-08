@@ -3,13 +3,24 @@ const requestRouter = express.Router();
 
 const { userAuth } = require("../middlewares/auth");
 
-requestRouter.post("/sendConnectionRequest", userAuth, async (req, res) => {
-    const user = req.user;
+requestRouter.post("/request/send/:status/:userId", userAuth, async (req, res) => {
+    const { status, userId } = req.params;
     try {
-        console.log("User sending request:", user._id);
+        const fromUserId = req.user._id; // Assuming userAuth middleware sets req.user
+        const toUserId = userId;
 
+        // Check if a connection request already exists
+        const existingRequest = await ConnectionRequest.findOne({ fromUserId, toUserId });
+        if (existingRequest) {
+            return res.status(400).send("Connection request already sent.");
+        }
 
-        res.send("Connection request sent successfully!");
+        // Create a new connection request
+        const newRequest = new ConnectionRequest({ fromUserId, toUserId, status });
+        await newRequest.save();
+
+        res.status(200).send("Connection request sent successfully.");
+
 
     } catch (err) {
         res.status(500).send("Error sending connection request: " + err.message);
