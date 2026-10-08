@@ -4,6 +4,7 @@ const validator = require('validator');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 const userSchema = new Schema({
     firstName: {
@@ -120,6 +121,8 @@ const userSchema = new Schema({
             message: 'Interests cannot exceed 10 items'
         }
     },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date },
 
 },
     {
@@ -140,6 +143,14 @@ userSchema.methods.validatePassword = async function (passwordInputByUser) {
     const isMatch = await bcrypt.compare(passwordInputByUser, passwordHash);
     return isMatch;
 }
+
+userSchema.methods.generatePasswordResetToken = async function () {
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    this.resetPasswordExpires = Date.now() + 15 * 60 * 1000;   // 15 minutes
+    await this.save();
+    return resetToken;   // the raw token goes in the email, the hash stays in the DB
+};
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;
