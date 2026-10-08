@@ -7,33 +7,20 @@ const { userAuth } = require("../middlewares/auth");
 
 const bcrypt = require('bcrypt');
 const validator = require('validator');
+const isValidToUpdate = require("../utils/isValidToUpdate");
 
-profileRouter.get("/profile/:userId", userAuth, async (req, res) => {
-    const userId = req.params.userId;
-    try {
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).send("User not found");
-        }
-        res.json(user);
-    } catch (err) {
-        res.status(500).send("Error fetching user: " + err.message);
-    }
+profileRouter.get("/profile/view", userAuth, async (req, res) => {
+
+    res.json(req.user);
+
 });
 
-profileRouter.patch("/profile/:userId", userAuth, async (req, res) => {
-    const userId = req.params?.userId;
-    if (userId !== req.user._id.toString()) {
-        return res.status(403).send("You are not authorized to update this user");
-    }
-    const canUpdateFields = ['firstName', 'lastName', 'password', 'age', 'gender', 'phoneNumber', 'address', 'city', 'state', 'zipCode', 'country', 'photoURL', 'bio', 'interests'];
-    const updateFields = Object.keys(req.body);
-    const isValidOperation = updateFields.every((field) => canUpdateFields.includes(field));
+profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
 
     const updates = { ...req.body };
 
     try {
-        if (!isValidOperation) {
+        if (!isValidToUpdate(req.body)) {
             return res.status(400).send("Invalid updates!");
         }
 
@@ -44,7 +31,7 @@ profileRouter.patch("/profile/:userId", userAuth, async (req, res) => {
             updates.password = await bcrypt.hash(updates.password, 10);
         }
 
-        const user = await User.findByIdAndUpdate(userId, updates, { returnDocument: "after" });
+        const user = await User.findByIdAndUpdate(req.user._id, updates, { returnDocument: "after", runValidators: true });
         if (!user) {
             return res.status(404).send("User not found");
         }
