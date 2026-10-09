@@ -50,11 +50,16 @@ requestRouter.post("/request/send/:status/:userId", userAuth, async (req, res) =
         // Create a new connection request
         const newRequest = new ConnectionRequest({ fromUserId, toUserId, status });
         await newRequest.save();
+        const statusText = { interested: "interested in", not_interested: "not interested in" };
+        const message = `${req.user.firstName} is ${statusText[status]} ${toUser.firstName}`;
 
-        res.status(201).json({ message: "Connection request sent successfully.", data: newRequest });
+        res.status(201).json({ message, data: newRequest });
 
 
     } catch (err) {
+        if (err.code === 11000) {
+            return res.status(400).json({ message: "A connection request already exists between you and this user." });
+        }
         res.status(500).json({ message: "Error sending connection request: " + err.message });
     }
 
