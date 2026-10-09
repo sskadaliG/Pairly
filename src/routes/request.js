@@ -63,7 +63,41 @@ requestRouter.post("/request/send/:status/:userId", userAuth, async (req, res) =
         res.status(500).json({ message: "Error sending connection request: " + err.message });
     }
 
+});
 
+requestRouter.post("/request/review/:status/:requestId", userAuth, async (req, res) => {
+    const { status, requestId } = req.params;
+    try {
+
+        // Validate the status parameter
+        const allowedStatus = ["accepted", "rejected"];
+        if (!allowedStatus.includes(status)) {
+            return res.status(400).json({ message: "Invalid status: " + status });
+        }
+
+        // Validate the requestId format
+        if (!mongoose.Types.ObjectId.isValid(requestId)) {
+            return res.status(400).json({ message: "Invalid request id." });
+        }
+
+        // Find the connection request
+        const connectionRequest = await ConnectionRequest.findOne({
+            _id: requestId,
+            toUserId: req.user._id,
+            status: "interested",
+        });
+        if (!connectionRequest) {
+            return res.status(404).json({ message: "Connection request not found." });
+        }
+
+        // Update the status of the connection request
+        connectionRequest.status = status;
+        await connectionRequest.save();
+        res.status(200).json({ message: "Connection request " + status, data: connectionRequest });
+
+    } catch (err) {
+        res.status(500).json({ message: "Error reviewing connection request: " + err.message });
+    }
 });
 
 module.exports = requestRouter;
