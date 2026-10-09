@@ -1,8 +1,11 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const requestRouter = express.Router();
 const ConnectionRequest = require("../models/connectionRequest");
 
 const { userAuth } = require("../middlewares/auth");
+const User = require("../models/user");
+
 
 requestRouter.post("/request/send/:status/:userId", userAuth, async (req, res) => {
     const { status, userId } = req.params;
@@ -17,7 +20,23 @@ requestRouter.post("/request/send/:status/:userId", userAuth, async (req, res) =
             return res.status(400).json({ message: "Invalid status: " + status });
         }
 
-        // Check if a connection request already exists
+        // Validate the userId format
+        if (!mongoose.Types.ObjectId.isValid(toUserId)) {
+            return res.status(400).json({ message: "Invalid user id." });
+        }
+
+        // Users cannot send a request to themselves
+        if (fromUserId.toString() === toUserId) {
+            return res.status(400).json({ message: "You cannot send a request to yourself." });
+        }
+
+        // Check that the recipient exists
+        const toUser = await User.findById(toUserId);
+        if (!toUser) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Check if a connection request already exists in either direction
         const existingRequest = await ConnectionRequest.findOne({
             $or: [
                 { fromUserId, toUserId },
@@ -25,24 +44,18 @@ requestRouter.post("/request/send/:status/:userId", userAuth, async (req, res) =
             ],
         });
         if (existingRequest) {
-            return res.status(400).send("Connection request already sent.");
-        }
-
-        //to check if user is trying to send a request to random userId which is not present in the database
-        const userExists = await ConnectionRequest.findOne({ toUserId });
-        if (!userExists) {
-            return res.status(404).send("User not found.");
+            return res.status(400).json({ message: "A connection request already exists between you and this user." });
         }
 
         // Create a new connection request
         const newRequest = new ConnectionRequest({ fromUserId, toUserId, status });
         await newRequest.save();
 
-        res.status(200).send({ message: "Connection request sent successfully.", data: newRequest });
+        res.status(201).json({ message: "Connection request sent successfully.", data: newRequest });
 
 
     } catch (err) {
-        res.status(500).send("Error sending connection request: " + err.message);
+        res.status(500).json({ message: "Error sending connection request: " + err.message });
     }
 
 
