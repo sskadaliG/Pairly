@@ -7,11 +7,12 @@ const { userAuth } = require("../middlewares/auth");
 
 const ConnectionRequest = require("../models/connectionRequest");
 
+const USER_SAFE_DATA = 'firstName lastName photoURL age gender bio';
+
 userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
-        const userSafeData = 'firstName lastName photoURL age gender bio';
-        const interestedRequests = await ConnectionRequest.find({ toUserId: userId, status: "interested" }).populate('fromUserId', userSafeData);
+        const interestedRequests = await ConnectionRequest.find({ toUserId: userId, status: "interested" }).populate('fromUserId', USER_SAFE_DATA);
         res.status(200).json({ message: "Interested requests fetched successfully.", data: interestedRequests });
     } catch (err) {
         res.status(500).send({ message: "Error fetching interested requests: " + err.message });
@@ -21,13 +22,12 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
 userRouter.get("/user/connections", userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
-        const userSafeData = 'firstName lastName photoURL age gender bio';
         const acceptedRequests = await ConnectionRequest.find({
             $or: [
                 { fromUserId: userId, status: "accepted" },
                 { toUserId: userId, status: "accepted" }
             ]
-        }).populate('fromUserId toUserId', userSafeData);
+        }).populate('fromUserId toUserId', USER_SAFE_DATA);
         const connections = acceptedRequests
             .map(request =>
                 request.fromUserId?._id.toString() === userId.toString()
@@ -45,7 +45,6 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
 userRouter.get("/feed", userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
-        const userSafeData = 'firstName lastName photoURL age gender bio';
         // Fetch all connection requests involving the authenticated user to exclude them from the feed
         const excludedRequests = await ConnectionRequest.find({
             $or: [
@@ -61,7 +60,7 @@ userRouter.get("/feed", userAuth, async (req, res) => {
             excludedUserIds.add(request.toUserId.toString());
         });
         // Fetch users not involved in any connection requests with the authenticated user
-        const feedUsers = await User.find({ _id: { $nin: [...excludedUserIds] } }).select(userSafeData);
+        const feedUsers = await User.find({ _id: { $nin: [...excludedUserIds] } }).select(USER_SAFE_DATA);
         res.status(200).json({ message: "Feed fetched successfully.", data: feedUsers });
     }
     catch (err) {
