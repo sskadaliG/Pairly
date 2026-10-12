@@ -51,3 +51,8 @@ Passwords must be at least 8 characters and include an uppercase letter, a lower
 | ------ | ------------------------- | ---- | ------------------------------------------------------------ |
 | GET    | `/user/requests/received` | 🔒   | Get pending `interested` requests sent to the logged-in user |
 | GET    | `/user/connections`       | 🔒   | Get the logged-in user's accepted connections                |
+| GET    | `/feed`                   | 🔒   | Get users the logged-in user has not interacted with yet     |
+
+**Query parameters**
+
+- `GET /feed`: `page` (default `1`) and `limit` (default `10`, max `50`). Example: `/feed?page=2&limit=10`. Excludes the logged-in user and anyone they have already sent a request to or received a request from.
