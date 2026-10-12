@@ -17,7 +17,7 @@ userRouter.get("/feed", userAuth, async (req, res) => {
     }
 });
 
-userRouter.get("/user/requests/interested", userAuth, async (req, res) => {
+userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
         const userSafeData = 'firstName lastName photoURL age gender bio';
