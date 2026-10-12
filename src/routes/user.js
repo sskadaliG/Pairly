@@ -28,4 +28,29 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     }
 });
 
+userRouter.get("/user/connections", userAuth, async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const userSafeData = 'firstName lastName photoURL age gender bio';
+        const acceptedRequests = await ConnectionRequest.find({
+            $or: [
+                { fromUserId: userId, status: "accepted" },
+                { toUserId: userId, status: "accepted" }
+            ]
+        }).populate('fromUserId toUserId', userSafeData);
+        const connections = acceptedRequests
+            .map(request =>
+                request.fromUserId?._id.toString() === userId.toString()
+                    ? request.toUserId
+                    : request.fromUserId
+            )
+            .filter(user => user !== null);
+
+        res.status(200).json({ message: "Connections fetched successfully.", data: connections });
+    } catch (err) {
+        res.status(500).send({ message: "Error fetching connections: " + err.message });
+    }
+});
+
+
 module.exports = userRouter;
