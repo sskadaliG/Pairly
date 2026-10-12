@@ -45,6 +45,12 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
 userRouter.get("/feed", userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
+
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        let limit = Math.max(parseInt(req.query.limit) || 10, 1);
+        limit = Math.min(limit, 50);
+        const skip = (page - 1) * limit;
+
         // Fetch all connection requests involving the authenticated user to exclude them from the feed
         const excludedRequests = await ConnectionRequest.find({
             $or: [
@@ -60,7 +66,7 @@ userRouter.get("/feed", userAuth, async (req, res) => {
             excludedUserIds.add(request.toUserId.toString());
         });
         // Fetch users not involved in any connection requests with the authenticated user
-        const feedUsers = await User.find({ _id: { $nin: [...excludedUserIds] } }).select(USER_SAFE_DATA);
+        const feedUsers = await User.find({ _id: { $nin: [...excludedUserIds] } }).sort({ _id: 1 }).select(USER_SAFE_DATA).skip(skip).limit(limit);
         res.status(200).json({ message: "Feed fetched successfully.", data: feedUsers });
     }
     catch (err) {
