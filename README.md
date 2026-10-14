@@ -33,10 +33,12 @@ Passwords must be at least 8 characters and include an uppercase letter, a lower
 | ------ | --------------- | ---- | ----------------------------------- |
 | GET    | `/profile/view` | 🔒   | Get the logged-in user's profile    |
 | PATCH  | `/profile/edit` | 🔒   | Update the logged-in user's profile |
+| PATCH  | `/profile/password` | 🔒   | Change the logged-in user's password |
 
 **Request body**
 
-- `PATCH /profile/edit`: any of `firstName`, `lastName`, `password`, `age`, `gender`, `phoneNumber`, `address`, `city`, `state`, `zipCode`, `country`, `photoURL`, `bio`, `interests`. Any other field is rejected with `400`.
+- `PATCH /profile/edit`: any of `firstName`, `lastName`, `age`, `gender`, `phoneNumber`, `address`, `city`, `state`, `zipCode`, `country`, `photoURL`, `bio`, `interests`. Any other field is rejected with `400`. Use `/profile/password` to change the password.
+- `PATCH /profile/password`: `{ "currentPassword": "...", "newPassword": "..." }`
 
 ### Connection Requests
 
