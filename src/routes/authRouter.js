@@ -12,6 +12,8 @@ const { validateSignUpData } = require("../utils/validateSignUpData");
 
 const crypto = require('crypto');
 
+const { loginLimiter, forgotPasswordLimiter } = require("../middlewares/rateLimiter");
+
 authRouter.post("/signup", async (req, res) => {
     const { firstName, lastName, email, password, age, gender, phoneNumber, address, city, state, zipCode, country, photoURL, bio, interests } = req.body;
     const passwordHash = await bcrypt.hash(password, 10);
@@ -32,7 +34,7 @@ authRouter.post("/signup", async (req, res) => {
 });
 
 
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", loginLimiter, async (req, res) => {
     const { email, password } = req.body;
 
     try {
@@ -62,7 +64,7 @@ authRouter.post("/login", async (req, res) => {
     }
 });
 
-authRouter.post("/forgot-password", async (req, res) => {
+authRouter.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
     const { email } = req.body;
 
     try {
