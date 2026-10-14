@@ -36,17 +36,17 @@ authRouter.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        if (!validator.isEmail(email)) {
+        if (!email || !password) {
+            return res.status(400).send("Email and password are required");
+        }
+
+        if (!validator.isEmail(String(email))) {
             return res.status(400).send("Invalid email format");
         }
 
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
-            return res.status(404).send("Invalid credentials");
-        }
-
-        if (!password) {
-            return res.status(400).send("Password is required");
+            return res.status(401).send("Invalid credentials");
         }
 
         const isPasswordValid = await user.validatePassword(password);
