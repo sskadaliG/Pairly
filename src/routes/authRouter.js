@@ -58,7 +58,7 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
         const token = await user.toJWT();
         res.cookie("token", token, { httpOnly: true });
 
-        res.send("Login successful!");
+        res.send({ message: "Login successful!", body: user });
     } catch (err) {
         res.status(500).send("Error logging in: " + err.message);
     }
