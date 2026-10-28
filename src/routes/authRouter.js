@@ -16,12 +16,15 @@ const { loginLimiter, forgotPasswordLimiter } = require("../middlewares/rateLimi
 
 authRouter.post("/signup", async (req, res) => {
     const { firstName, lastName, email, password, age, gender, phoneNumber, address, city, state, zipCode, country, photoURL, bio, interests } = req.body;
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const user = new User({ firstName, lastName, email, password: passwordHash, age, gender, phoneNumber, address, city, state, zipCode, country, photoURL, bio, interests });
 
     try {
+        // Validate first, so bad input gets a 400 instead of bcrypt throwing a 500
         validateSignUpData(req);
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        const user = new User({ firstName, lastName, email, password: passwordHash, age, gender, phoneNumber, address, city, state, zipCode, country, photoURL, bio, interests });
+
         await user.save();
         res.send("User created successfully!");
     } catch (err) {
@@ -69,7 +72,13 @@ authRouter.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
     const { email } = req.body;
 
     try {
-        if (!validator.isEmail(email)) {
+        if (!email) {
+            return res.status(400).send("Email is required");
+        }
+
+        // isEmail throws on non-strings, and a string also keeps
+        // objects like { "$ne": null } out of the database query
+        if (typeof email !== "string" || !validator.isEmail(email)) {
             return res.status(400).send("Invalid email format");
         }
 
