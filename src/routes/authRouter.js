@@ -85,7 +85,8 @@ authRouter.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
         const user = await User.findOne({ email });
         if (user) {
             const resetToken = await user.generatePasswordResetToken();
-            console.log("Reset link:", `http://localhost:3000/reset-password?token=${resetToken}`);
+            // The link opens the frontend's reset password page, which sends the token to POST /reset-password
+            console.log("Reset link:", `http://localhost:5173/reset-password?token=${resetToken}`);
         }
         res.send("If that email is registered, a reset link has been sent.");
 
