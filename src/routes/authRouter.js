@@ -45,11 +45,14 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
             return res.status(400).send("Email and password are required");
         }
 
-        if (!validator.isEmail(String(email))) {
+        if (typeof email !== "string" || !validator.isEmail(email.trim())) {
             return res.status(400).send("Invalid email format");
         }
 
-        const user = await User.findOne({ email }).select('+password');
+        // Emails are saved lowercase (see the user model), so search the same way
+        const normalizedEmail = email.trim().toLowerCase();
+
+        const user = await User.findOne({ email: normalizedEmail }).select('+password');
         if (!user) {
             return res.status(401).send("Invalid credentials");
         }
@@ -78,11 +81,14 @@ authRouter.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
 
         // isEmail throws on non-strings, and a string also keeps
         // objects like { "$ne": null } out of the database query
-        if (typeof email !== "string" || !validator.isEmail(email)) {
+        if (typeof email !== "string" || !validator.isEmail(email.trim())) {
             return res.status(400).send("Invalid email format");
         }
 
-        const user = await User.findOne({ email });
+        // Emails are saved lowercase (see the user model), so search the same way
+        const normalizedEmail = email.trim().toLowerCase();
+
+        const user = await User.findOne({ email: normalizedEmail });
         if (user) {
             const resetToken = await user.generatePasswordResetToken();
             // The link opens the frontend's reset password page, which sends the token to POST /reset-password
