@@ -42,7 +42,12 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
             return res.status(400).json({ message: "Current password and new password are required." });
         }
 
-        if (!validator.isStrongPassword(String(newPassword))) {
+        // bcrypt only accepts strings, so reject numbers, arrays and objects with a 400
+        if (typeof currentPassword !== "string" || typeof newPassword !== "string") {
+            return res.status(400).json({ message: "Passwords must be text." });
+        }
+
+        if (!validator.isStrongPassword(newPassword)) {
             return res.status(400).json({ message: "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one symbol" });
         }
 
@@ -53,7 +58,7 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
         // req.user does not include the password (select: false), so load it explicitly
         const user = await User.findById(req.user._id).select('+password');
 
-        const isPasswordValid = await user.validatePassword(String(currentPassword));
+        const isPasswordValid = await user.validatePassword(currentPassword);
         if (!isPasswordValid) {
             return res.status(401).json({ message: "Current password is incorrect." });
         }

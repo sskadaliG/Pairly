@@ -45,6 +45,11 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
             return res.status(400).send("Email and password are required");
         }
 
+        // bcrypt only accepts strings, so reject numbers, arrays and objects with a 400
+        if (typeof password !== "string") {
+            return res.status(400).send("Invalid credentials");
+        }
+
         if (typeof email !== "string" || !validator.isEmail(email.trim())) {
             return res.status(400).send("Invalid email format");
         }
@@ -107,6 +112,11 @@ authRouter.post("/reset-password", async (req, res) => {
     try {
         if (!resetToken || !newPassword) {
             return res.status(400).send("Reset token and new password are required");
+        }
+
+        // crypto and bcrypt only accept strings, so reject anything else with a 400
+        if (typeof resetToken !== "string" || typeof newPassword !== "string") {
+            return res.status(400).send("Reset token and new password must be text");
         }
         const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
         const user = await User.findOne({
