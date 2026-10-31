@@ -17,10 +17,15 @@ const { loginLimiter, forgotPasswordLimiter } = require("../middlewares/rateLimi
 authRouter.post("/signup", async (req, res) => {
     const { firstName, lastName, email, password, age, gender, phoneNumber, address, city, state, zipCode, country, photoURL, bio, interests } = req.body;
 
+    // Validate first, so bad input gets a 400 instead of bcrypt throwing a 500.
+    // These messages are written by us for the user, so they're safe to send.
     try {
-        // Validate first, so bad input gets a 400 instead of bcrypt throwing a 500
         validateSignUpData(req);
+    } catch (err) {
+        return res.status(400).send("Error creating user: " + err.message);
+    }
 
+    try {
         const passwordHash = await bcrypt.hash(password, 10);
 
         const user = new User({ firstName, lastName, email, password: passwordHash, age, gender, phoneNumber, address, city, state, zipCode, country, photoURL, bio, interests });
@@ -31,7 +36,13 @@ authRouter.post("/signup", async (req, res) => {
         if (err.code === 11000) {
             return res.status(409).send("Email already registered");
         }
-        res.status(400).send("Error creating user: " + err.message);
+        // Mongoose validation errors describe the user's own input, like "age is less than 18"
+        if (err.name === "ValidationError" || err.name === "CastError") {
+            return res.status(400).send("Error creating user: " + err.message);
+        }
+        // Anything else is unexpected: log the details here, send a general message
+        console.error("Error creating user:", err);
+        res.status(500).send("Something went wrong. Please try again later.");
     }
 
 });
@@ -72,7 +83,8 @@ authRouter.post("/login", loginLimiter, async (req, res) => {
         delete userData.password;
         res.send({ message: "Login successful!", body: userData });
     } catch (err) {
-        res.status(500).send("Error logging in: " + err.message);
+        console.error("Error logging in:", err);
+        res.status(500).send("Something went wrong. Please try again later.");
     }
 });
 
@@ -102,7 +114,8 @@ authRouter.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
         res.send("If that email is registered, a reset link has been sent.");
 
     } catch (err) {
-        res.status(500).send("Error processing forgot password: " + err.message);
+        console.error("Error processing forgot password:", err);
+        res.status(500).send("Something went wrong. Please try again later.");
     }
 });
 
@@ -137,7 +150,8 @@ authRouter.post("/reset-password", async (req, res) => {
 
         res.send("Password reset successful!");
     } catch (err) {
-        res.status(500).send("Error resetting password: " + err.message);
+        console.error("Error resetting password:", err);
+        res.status(500).send("Something went wrong. Please try again later.");
     }
 });
 

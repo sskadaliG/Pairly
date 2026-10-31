@@ -60,7 +60,8 @@ requestRouter.post("/request/send/:status/:userId", userAuth, async (req, res) =
         if (err.code === 11000) {
             return res.status(400).json({ message: "A connection request already exists between you and this user." });
         }
-        res.status(500).json({ message: "Error sending connection request: " + err.message });
+        console.error("Error sending connection request:", err);
+        res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
 
 });
@@ -96,7 +97,8 @@ requestRouter.post("/request/review/:status/:requestId", userAuth, async (req, r
         res.status(200).json({ message: "Connection request " + status, data: connectionRequest });
 
     } catch (err) {
-        res.status(500).json({ message: "Error reviewing connection request: " + err.message });
+        console.error("Error reviewing connection request:", err);
+        res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
 });
 

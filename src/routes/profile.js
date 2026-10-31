@@ -30,7 +30,12 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
         }
         res.json(user);
     } catch (err) {
-        res.status(400).send("Error updating user: " + err.message);
+        // Mongoose validation errors describe the user's own input, like "Invalid URL format"
+        if (err.name === "ValidationError" || err.name === "CastError") {
+            return res.status(400).send("Error updating user: " + err.message);
+        }
+        console.error("Error updating user:", err);
+        res.status(500).send("Something went wrong. Please try again later.");
     }
 });
 
@@ -68,7 +73,8 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
 
         res.status(200).json({ message: "Password updated successfully." });
     } catch (err) {
-        res.status(500).json({ message: "Error updating password: " + err.message });
+        console.error("Error updating password:", err);
+        res.status(500).json({ message: "Something went wrong. Please try again later." });
     }
 });
 

@@ -18,7 +18,8 @@ const userAuth = async (req, res, next) => {
         req.user = user;
         next();
     } catch (err) {
-        res.status(401).send("Error:" + err.message);
+        // An invalid or expired token: don't send the jwt library's error details
+        res.status(401).send("Please login again");
     }
 
 };

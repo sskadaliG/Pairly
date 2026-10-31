@@ -15,7 +15,8 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
         const interestedRequests = await ConnectionRequest.find({ toUserId: userId, status: "interested" }).populate('fromUserId', USER_SAFE_DATA);
         res.status(200).json({ message: "Interested requests fetched successfully.", data: interestedRequests });
     } catch (err) {
-        res.status(500).send({ message: "Error fetching interested requests: " + err.message });
+        console.error("Error fetching interested requests:", err);
+        res.status(500).send({ message: "Something went wrong. Please try again later." });
     }
 });
 
@@ -38,7 +39,8 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
 
         res.status(200).json({ message: "Connections fetched successfully.", data: connections });
     } catch (err) {
-        res.status(500).send({ message: "Error fetching connections: " + err.message });
+        console.error("Error fetching connections:", err);
+        res.status(500).send({ message: "Something went wrong. Please try again later." });
     }
 });
 
@@ -70,7 +72,8 @@ userRouter.get("/feed", userAuth, async (req, res) => {
         res.status(200).json({ message: "Feed fetched successfully.", data: feedUsers });
     }
     catch (err) {
-        res.status(500).send({ message: "Error fetching feed: " + err.message });
+        console.error("Error fetching feed:", err);
+        res.status(500).send({ message: "Something went wrong. Please try again later." });
     }
 });
 
