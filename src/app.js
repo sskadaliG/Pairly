@@ -16,7 +16,12 @@ const userRouter = require("./routes/user");
 
 const cors = require("cors");
 
+const helmet = require("helmet");
+
 require('dotenv').config();
+
+// Adds standard security headers to every response
+app.use(helmet());
 
 app.use(cors({
     origin: "http://localhost:5173",
