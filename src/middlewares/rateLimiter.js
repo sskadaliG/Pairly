@@ -18,4 +18,14 @@ const forgotPasswordLimiter = rateLimit({
     message: { message: "Too many password reset requests. Please try again after an hour." },
 });
 
-module.exports = { loginLimiter, forgotPasswordLimiter };
+// Max 5 signups per IP every hour, to stop scripts creating fake accounts
+// and checking which emails are registered (409 "Email already registered")
+const signupLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { message: "Too many signup attempts. Please try again after an hour." },
+});
+
+module.exports = { loginLimiter, forgotPasswordLimiter, signupLimiter };

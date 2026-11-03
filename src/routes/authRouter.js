@@ -12,9 +12,9 @@ const { validateSignUpData } = require("../utils/validateSignUpData");
 
 const crypto = require('crypto');
 
-const { loginLimiter, forgotPasswordLimiter } = require("../middlewares/rateLimiter");
+const { loginLimiter, forgotPasswordLimiter, signupLimiter } = require("../middlewares/rateLimiter");
 
-authRouter.post("/signup", async (req, res) => {
+authRouter.post("/signup", signupLimiter, async (req, res) => {
     const { firstName, lastName, email, password, age, gender, phoneNumber, address, city, state, zipCode, country, photoURL, bio, interests } = req.body;
 
     // Validate first, so bad input gets a 400 instead of bcrypt throwing a 500.
