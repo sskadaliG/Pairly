@@ -69,7 +69,13 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
         }
 
         user.password = await bcrypt.hash(newPassword, 10);
+        // Logs out every other session, e.g. on another device
+        user.passwordChangedAt = Date.now();
         await user.save();
+
+        // This session's token is now too old as well, so give it a new one to stay logged in
+        const token = await user.toJWT();
+        res.cookie("token", token, { httpOnly: true });
 
         res.status(200).json({ message: "Password updated successfully." });
     } catch (err) {

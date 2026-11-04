@@ -146,6 +146,8 @@ authRouter.post("/reset-password", async (req, res) => {
         user.password = await bcrypt.hash(newPassword, 10);
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
+        // Logs out every existing session, e.g. an attacker who stole the old password
+        user.passwordChangedAt = Date.now();
         await user.save();
 
         res.send("Password reset successful!");

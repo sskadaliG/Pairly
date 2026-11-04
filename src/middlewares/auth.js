@@ -15,6 +15,12 @@ const userAuth = async (req, res, next) => {
         if (!user) {
             return res.status(404).send("User not found, please login again");
         }
+
+        // The password changed after this token was issued, so this login is no longer valid.
+        // iat ("issued at") is in seconds, so compare in seconds too.
+        if (user.passwordChangedAt && decodedMessage.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)) {
+            return res.status(401).send("Please login again");
+        }
         req.user = user;
         next();
     } catch (err) {

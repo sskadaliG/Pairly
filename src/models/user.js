@@ -123,6 +123,8 @@ const userSchema = new Schema({
     },
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpires: { type: Date },
+    // When the password last changed. Login tokens issued before this are rejected (see userAuth)
+    passwordChangedAt: { type: Date },
 
 },
     {
