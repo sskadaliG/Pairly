@@ -14,6 +14,8 @@ const profileRouter = require("./routes/profile");
 
 const userRouter = require("./routes/user");
 
+const chatRouter = require("./routes/chat");
+
 const cors = require("cors");
 
 const helmet = require("helmet");
@@ -40,6 +42,8 @@ app.use("/", authRouter);
 app.use("/", requestRouter);
 
 app.use("/", profileRouter);
+
+app.use("/", chatRouter);
 
 
 
