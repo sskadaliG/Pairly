@@ -20,6 +20,8 @@ const chatRouter = require("./routes/chat");
 
 const cors = require("cors");
 
+const initializeSocket = require("./utils/socket");
+
 const helmet = require("helmet");
 
 require('dotenv').config();
@@ -52,6 +54,9 @@ app.use("/", chatRouter);
 
 // Socket.IO needs the underlying HTTP server, so create it from the Express app
 const server = http.createServer(app);
+
+// Attach Socket.IO to the same server
+initializeSocket(server);
 
 connectDB().then(() => {
     console.log("Database connected successfully!");
