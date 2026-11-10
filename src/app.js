@@ -1,5 +1,7 @@
 const express = require('express');
 
+const http = require('http');
+
 const connectDB = require("./config/database");
 
 const app = express();
@@ -48,10 +50,14 @@ app.use("/", chatRouter);
 
 
 
+// Socket.IO needs the underlying HTTP server, so create it from the Express app
+const server = http.createServer(app);
+
 connectDB().then(() => {
     console.log("Database connected successfully!");
 
-    app.listen(3000, () => {
+    // server.listen (not app.listen), so Express and Socket.IO can share port 3000
+    server.listen(3000, () => {
         console.log("server is up and running!")
     })
 
