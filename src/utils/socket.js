@@ -1,5 +1,6 @@
 const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
+const mongoose = require("mongoose");
 const { getUserFromToken } = require("../middlewares/auth");
 
 const initializeSocket = (server) => {
@@ -47,6 +48,34 @@ const initializeSocket = (server) => {
         // so sending to this room reaches every one of them.
         const myId = socket.user._id.toString();
         socket.join(myId);
+
+        // The browser sends: socket.emit("sendMessage", { toUserId, text }, (reply) => { ... })
+        // reply is the callback: calling it sends an answer back to that one browser.
+        socket.on("sendMessage", (data, reply) => {
+            // Without a callback there's no one to answer, so ignore the event
+            if (typeof reply !== "function") {
+                return;
+            }
+
+            const { toUserId, text } = data || {};
+
+            // Same idea as the typeof checks in the API: anything can arrive here
+            if (typeof toUserId !== "string" || !mongoose.Types.ObjectId.isValid(toUserId)) {
+                return reply({ ok: false, error: "Invalid user" });
+            }
+            if (typeof text !== "string" || !text.trim()) {
+                return reply({ ok: false, error: "Message can't be empty" });
+            }
+            if (text.trim().length > 1000) {
+                return reply({ ok: false, error: "Message is too long (max 1000 characters)" });
+            }
+            if (toUserId === myId) {
+                return reply({ ok: false, error: "You can't message yourself" });
+            }
+
+            // Not saved or delivered yet (step 3h), just confirm the input was fine
+            reply({ ok: true });
+        });
 
         socket.on("disconnect", () => {
             console.log("A user disconnected:", socket.id);
