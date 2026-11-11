@@ -2,6 +2,8 @@ const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const { getUserFromToken } = require("../middlewares/auth");
+const ConnectionRequest = require("../models/connectionRequest");
+const Message = require("../models/message");
 
 const initializeSocket = (server) => {
     const io = new Server(server, {
@@ -51,7 +53,7 @@ const initializeSocket = (server) => {
 
         // The browser sends: socket.emit("sendMessage", { toUserId, text }, (reply) => { ... })
         // reply is the callback: calling it sends an answer back to that one browser.
-        socket.on("sendMessage", (data, reply) => {
+        socket.on("sendMessage", async (data, reply) => {
             // Without a callback there's no one to answer, so ignore the event
             if (typeof reply !== "function") {
                 return;
@@ -73,8 +75,30 @@ const initializeSocket = (server) => {
                 return reply({ ok: false, error: "You can't message yourself" });
             }
 
-            // Not saved or delivered yet (step 3h), just confirm the input was fine
-            reply({ ok: true });
+            try {
+                // Only connections can chat, the same rule as GET /chat/:userId
+                const connection = await ConnectionRequest.findOne({
+                    status: "accepted",
+                    $or: [
+                        { fromUserId: myId, toUserId },
+                        { fromUserId: toUserId, toUserId: myId },
+                    ],
+                });
+                if (!connection) {
+                    return reply({ ok: false, error: "You can only chat with your connections" });
+                }
+
+                const message = await Message.create({ fromUserId: myId, toUserId, text: text.trim() });
+
+                // Deliver to both rooms: the other person, and all of my own tabs and devices.
+                // Socket.IO sends it once to each connection, even if it's in both rooms.
+                io.to(toUserId).to(myId).emit("newMessage", message);
+
+                reply({ ok: true });
+            } catch (err) {
+                console.error("Error sending message:", err);
+                reply({ ok: false, error: "Something went wrong. Please try again later." });
+            }
         });
 
         socket.on("disconnect", () => {
