@@ -42,6 +42,12 @@ const initializeSocket = (server) => {
     io.on("connection", (socket) => {
         console.log("A user connected:", socket.id, socket.user.firstName);
 
+        // Each user joins a room named after their own ID. A user can have several
+        // connections (two tabs, phone and laptop), and they all join the same room,
+        // so sending to this room reaches every one of them.
+        const myId = socket.user._id.toString();
+        socket.join(myId);
+
         socket.on("disconnect", () => {
             console.log("A user disconnected:", socket.id);
         });
