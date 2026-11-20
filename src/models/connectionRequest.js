@@ -8,6 +8,9 @@ const connectionRequestSchema = new Schema({
 }, { timestamps: true });
 
 connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true });
+// The index above only helps queries that start with fromUserId. This one serves
+// the "sent to me" queries: received requests, connections and the feed.
+connectionRequestSchema.index({ toUserId: 1, status: 1 });
 
 const ConnectionRequest = mongoose.model('ConnectionRequest', connectionRequestSchema);
 module.exports = ConnectionRequest;
