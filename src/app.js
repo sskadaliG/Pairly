@@ -24,10 +24,15 @@ const initializeSocket = require("./utils/socket");
 
 const helmet = require("helmet");
 
+const compression = require("compression");
+
 require('dotenv').config();
 
 // Adds standard security headers to every response
 app.use(helmet());
+
+// Gzips responses, so JSON lists like the feed and chat history download faster
+app.use(compression());
 
 app.use(cors({
     origin: "http://localhost:5173",
