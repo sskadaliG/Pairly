@@ -23,7 +23,7 @@ chatRouter.get("/chat/:userId", userAuth, async (req, res) => {
         }
 
         // Check that the other user exists
-        const otherUser = await User.findById(userId).select(USER_SAFE_DATA);
+        const otherUser = await User.findById(userId).select(USER_SAFE_DATA).lean();
         if (!otherUser) {
             return res.status(404).json({ message: "User not found." });
         }
@@ -46,7 +46,7 @@ chatRouter.get("/chat/:userId", userAuth, async (req, res) => {
                 { fromUserId: myId, toUserId: userId },
                 { fromUserId: userId, toUserId: myId },
             ],
-        }).sort({ createdAt: -1 }).limit(MESSAGE_LIMIT);
+        }).sort({ createdAt: -1 }).limit(MESSAGE_LIMIT).lean();
         messages.reverse();
 
         res.status(200).json({ message: "Chat fetched successfully.", data: { user: otherUser, messages } });

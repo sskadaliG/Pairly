@@ -12,7 +12,7 @@ const USER_SAFE_DATA = 'firstName lastName photoURL age gender bio';
 userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     try {
         const userId = req.user._id;
-        const interestedRequests = await ConnectionRequest.find({ toUserId: userId, status: "interested" }).populate('fromUserId', USER_SAFE_DATA);
+        const interestedRequests = await ConnectionRequest.find({ toUserId: userId, status: "interested" }).populate('fromUserId', USER_SAFE_DATA).lean();
         res.status(200).json({ message: "Interested requests fetched successfully.", data: interestedRequests });
     } catch (err) {
         console.error("Error fetching interested requests:", err);
@@ -28,7 +28,7 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
                 { fromUserId: userId, status: "accepted" },
                 { toUserId: userId, status: "accepted" }
             ]
-        }).populate('fromUserId toUserId', USER_SAFE_DATA);
+        }).populate('fromUserId toUserId', USER_SAFE_DATA).lean();
         const connections = acceptedRequests
             .map(request =>
                 request.fromUserId?._id.toString() === userId.toString()
@@ -59,7 +59,7 @@ userRouter.get("/feed", userAuth, async (req, res) => {
                 { fromUserId: userId },
                 { toUserId: userId }
             ]
-        }).select('fromUserId toUserId');
+        }).select('fromUserId toUserId').lean();
 
         // Create a set of user IDs to exclude from the feed
         const excludedUserIds = new Set([userId.toString()]);
@@ -68,7 +68,7 @@ userRouter.get("/feed", userAuth, async (req, res) => {
             excludedUserIds.add(request.toUserId.toString());
         });
         // Fetch users not involved in any connection requests with the authenticated user
-        const feedUsers = await User.find({ _id: { $nin: [...excludedUserIds] } }).sort({ _id: 1 }).select(USER_SAFE_DATA).skip(skip).limit(limit);
+        const feedUsers = await User.find({ _id: { $nin: [...excludedUserIds] } }).sort({ _id: 1 }).select(USER_SAFE_DATA).skip(skip).limit(limit).lean();
         res.status(200).json({ message: "Feed fetched successfully.", data: feedUsers });
     }
     catch (err) {
