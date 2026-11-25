@@ -5,6 +5,8 @@ const messageSchema = new Schema({
     fromUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     toUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     text: { type: String, required: true, trim: true, minlength: 1, maxlength: 1000 },
+    // When the receiver read it. null means not read yet.
+    readAt: { type: Date, default: null },
 }, { timestamps: true });
 
 // Speeds up loading a conversation: messages between two users, oldest first
