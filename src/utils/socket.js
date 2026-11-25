@@ -101,6 +101,32 @@ const initializeSocket = (server) => {
             }
         });
 
+        // The browser sends: socket.emit("markRead", { fromUserId })
+        // meaning "I've read the messages this person sent me".
+        socket.on("markRead", async (data) => {
+            const { fromUserId } = data || {};
+            if (typeof fromUserId !== "string" || !mongoose.Types.ObjectId.isValid(fromUserId)) {
+                return;
+            }
+
+            try {
+                const readAt = new Date();
+                // toUserId: myId means you can only mark messages sent to you.
+                // readAt: null skips ones already read, so their time stays the same.
+                const result = await Message.updateMany(
+                    { fromUserId, toUserId: myId, readAt: null },
+                    { readAt }
+                );
+
+                // Only tell the sender if something actually changed
+                if (result.modifiedCount > 0) {
+                    io.to(fromUserId).emit("messagesRead", { readerId: myId, readAt });
+                }
+            } catch (err) {
+                console.error("Error marking messages as read:", err);
+            }
+        });
+
         socket.on("disconnect", () => {
             console.log("A user disconnected:", socket.id);
         });
